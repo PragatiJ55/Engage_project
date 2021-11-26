@@ -1,10 +1,10 @@
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
-//  const{auth, requiresAuth}= require('express-openid-connect');
+const{auth, requiresAuth}= require('express-openid-connect');
 var bodyParser= require("body-parser");
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
-//  require('dotenv').config();
+require('dotenv').config();
 
 // app.use(
 //     auth(
@@ -30,7 +30,7 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false });
 app.get('/',(req, res) => {
     //res.send(req.oidc.isAuthenticated()?'Logged in':'Logged out');
     //res.redirect('/login')
-    res.send("meow");
+    res.send("meow again");
 })
 
 app.listen(port, () => {
