@@ -2,5 +2,7 @@
     "appService.zipIgnorePattern": [
         "node_modules{,/**}",
         ".vscode{,/**}"
-    ]
+    ],
+    "appService.defaultWebAppToDeploy": "/subscriptions/e2b9c53b-6e99-4cd4-96f1-8dfdd05ada85/resourceGroups/Tests/providers/Microsoft.Web/sites/TestPragati",
+    "appService.deploySubpath": "."
 }
