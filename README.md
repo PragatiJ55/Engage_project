@@ -6,7 +6,7 @@ Website hosted on azure at https://testpragati.azurewebsites.net/
 
 1. Allows authentication for 2 roles, teacher and student. Once authenticated, the interface is shown based on the role.
 
-2. Allows a teacher to schedule classes by selecting the year in university(1st,2nd, 3rd or 4th), department, subject, start date and time, and duration.
+2. Allows a teacher to schedule classes by selecting the year in university(1st,2nd, 3rd or 4th), department, subject, start date and time, and duration. Class can be scheduled only after current time. 
 If the start time and duration overlaps with a class already scheduled, for example If teacherA is trying to schedule a class at 3:30 PM, but teacherB already scheduled a class
 for the same department and year at 3PM for duration of 50 minutes, then teacher A cannot schedule the class. This feature covers all cases in which overlap can take place.
 
