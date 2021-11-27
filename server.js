@@ -17,50 +17,30 @@ var client = elasticemail.createClient({
   username: 'jaykay',
   apiKey: '6608A6A955AAE805C390C1A738C0D0DF964FD242D1B38136E6CC8F7FD1EC212F39E8E439D880A4DB70FC833B040AB324'
 });
+const mysql = require('mysql');
 
-const config = {
-  authentication: {
-    options: {
-      userName: "pragati", // update me
-      password: "password123.." // update me
-    },
-    type: "default"
-  },
-  server: "engage-pragati.database.windows.net", // update me
-  options: {
-    database: "testDB", //update me
-    encrypt: true
-  }
+var config =
+{
+    host: 'uni-pragati.mysql.database.azure.com',
+    user: 'pragati',
+    password: 'password123..',
+    database: 'testDB',
+    port: 3306,
+    ssl: true
 };
-const connection = new Connection(config);
-
 // Attempt to connect and execute queries if connection goes through
-connection.on("connect", err => {
-  if (err) {
-    console.error(err.message);
-  } else {
-    const request = new Request(
-      `select id from student where name='PJ'`,
-      (err, rowCount) => {
-        if (err) {
-          console.error(err.message);
-        } else {
-          console.log(`${rowCount} row(s) returned`);
-        }
-      }
-
-    );
-    request.on("row", columns => {
-      columns.forEach(column => {
-        console.log("%s\t%s", column.metadata.colName, column.value);
-      });
-    });
-  
-    connection.execSql(request);
+const con = new mysql.createConnection(config);
+con.connect(
+  function (err) { 
+  if (err) { 
+      console.log("!!! Cannot connect !!! Error:");
+      throw err;
+  }
+  else
+  {
+     console.log("Connection established.");
   }
 });
-
-connection.connect();
 app.use(express.static(__dirname + '/public'));
 app.use(
   auth({
@@ -81,54 +61,77 @@ var auth0 = new AuthenticationClient({
   clientSecret:
     "3MszsueN33eG7OgBhLMStfPORgbUHIC-p9TrI5yXTR2B6KrseC7pmWQGxVhvA13g",
 });
-
-app.get("/", (req, res) => {
+let role = "";
+app.get("/",requiresAuth(), (req, res) => {
   //res.send(req.oidc.isAuthenticated()?'Logged in':'Logged out');
-  auth0.clientCredentialsGrant(
-    {
-      audience: "https://dev-kh2d5kc6.us.auth0.com/api/v2/",
-      scope: "read:users read:roles",
-    },
-    function (err, response) {
-      if (err) {
-        // Handle error.
-      }
-      token = response.access_token;
-    }
-  );
-  localStorage.clear();
-  if (req.oidc.isAuthenticated()) {
-    user_email = req.oidc.user.email;
-    user_id = req.oidc.user.sub;
-    console.log(user_id);
-    localStorage.setItem("user_id", user_id);
-    var axios = require("axios").default;
 
-    var opt = {
-      method: "POST",
-      url: `http://dev-kh2d5kc6.us.auth0.com/api/v2/users/${user_id}/roles`,
-      headers: { authorization: `Bearer ${token}` },
-    };
-    let role = "";
-    axios
-      .request(opt)
-      .then(function (response) {
-        console.log(response.data);
-        role = response.data[0].name;
-
-        console.log(role);
-        if (role == "Teacher") {
-          res.sendFile("teacher_main.html", { root: __dirname });
+        if (req.oidc.isAuthenticated()) {
+          localStorage.clear();
+          user_email = req.oidc.user.email;
+          user_id = req.oidc.user.sub;
+          console.log(user_id);
+          localStorage.setItem("user_id", user_id);
+          var axios = require("axios").default;
+          auth0.clientCredentialsGrant(
+            {
+              audience: "https://dev-kh2d5kc6.us.auth0.com/api/v2/",
+              scope: "read:users read:roles",
+            },
+            function (err, response) {
+              if (err) {
+                // Handle error.
+        
+              }
+              token = response.access_token;
+              var opt = {
+                method: "POST",
+                url: `http://dev-kh2d5kc6.us.auth0.com/api/v2/users/${user_id}/roles`,
+                headers: { authorization: `Bearer ${token}` },
+              };
+              axios
+                .request(opt)
+                .then(function (response) {
+                  console.log(response.data);
+                  role = response.data[0].name;
+          
+                  console.log(role);
+                  if (role == "Teacher") {
+                    res.sendFile("teacher_main.html", { root: __dirname });
+                  } else {
+                    res.sendFile("student.html", { root: __dirname });
+                  }
+                })
+                .catch(function (error) {
+                  //console.error(error);
+                  console.log("Error in axios request");
+                });
+            })
+          
         } else {
-          res.sendFile("student.html", { root: __dirname });
+          return res.redirect("/login");
         }
-      })
-      .catch(function (error) {
-        console.error(error);
-      });
-  } else {
-    return res.redirect("/login");
-  }
+      }
+  
+ 
+    
+  
+  
+    
+  
+  
+);
+app.get('/scheduled_classes',requiresAuth(),(req,res)=>
+{
+  
+      let get_classes="select year,name, subject, startDate,endDate from classes join departments on classes.dept_id=departments.dept_id where teacher_id='"+localStorage.user_id+"' and startDate>CONCAT(CURDATE(),' 00:00:00') order by startDate;";
+      console.log(get_classes);
+      con.query(get_classes, function(err,result){
+        console.log(result);
+        res.render('scheduled_classes',{
+          classes: result
+        })
+        //console.log(dept);
+    });
 });
 app.get('/teacher',requiresAuth(),(req,res)=>
 {
@@ -149,97 +152,147 @@ app.post('/schedule-class',urlencodedParser,function(req,res){
   console.log(input_end_date);
   let q_get_name_of_teacher="select name from teacher where teacher_id='"+localStorage.user_id+"';";
   let name="";
-  // con.query(q_get_name_of_teacher,function(err,result){
-  //     name=result[0].name;
-  // });
+  console.log(q_get_name_of_teacher);
   
-  // let q="select count(startDate) as overlap from classes join departments on classes.dept_id=departments.dept_id where year='"+ year+"' and name='"+dept+"' and startDate between '"+input_start_date+"' and '"+input_end_date
-  //     +"' or endDate between '"+input_start_date+"' and '"+input_end_date
-  //     +"' or startDate<'"+input_start_date+"' and endDate>'"+input_end_date+"' or startDate>'"+input_start_date
-  //     +"' and endDate<'"+input_end_date+"';";
-  //     // let query="select * from datetimes where startDate between "+input_start_date+" and "+input_end_date+"' or endDate between '"+input_start_date+"' and '"+input_end_date
-  //     // +"' or startDate<'"+input_start_date+"' and endDate>'"+input_end_date+"' or startDate>'"+input_start_date+"' and endDate<'"+input_end_date;
-  //     console.log(q);
-  //     con.query(q, function (err, result) {
-  //       if(result[0].overlap==0){
-  //         let dept_id;
-  //         con.query("select dept_id from departments where name='"+dept+"';", function(err,result){
-  //             dept_id=result[0].dept_id;
-  //             //console.log(dept);
-  //             let aq="insert into classes values('"+localStorage.user_id+"','"+year+"','"+dept_id+"','"+subject+"','"+input_start_date+"','"+input_end_date+"');";
-  //           console.log(aq);
-  //           con.query(aq,function(er,res){
-  //               console.log(res);
-  //               if (err) throw err;
-  //           });
-  //           let get_emails_query="select email from students where dept_id='"+dept_id+"' and year='"+year+"';";
-  //           if(year==1){
-  //             year="1st";
-  //           }
-  //           else if(year==2){
-  //             year="2nd";
-  //           }
-  //           else if(year==3){
-  //             year="3rd";
-  //           }
-  //           else{
-  //             year="4th";
-  //           }
-  //           res.render('sc',{
-  //             dept: dept,
-  //             year: year,
-  //             time: input_start_date,
-  //           })
-  //           con.query(get_emails_query,function(er,res){
-  //             console.log(res);
-  //             if (err) throw err;
-  //             if(res.length>0){
-  //               let emails=[];
-  //             let emails_str="";
-  //           for(let i=0;i<res.length;i++){
-  //             emails.push(res[i].email);
-  //           }
-  //           for(let i=0;i<res.length-1;i++){
-  //             emails_str+=res[i].email+",";
-  //           }
-  //           emails_str+=res[res.length-1].email;
-  //           console.log(emails_str);
-  //           var msg = {
-  //             from: "jaykay.sbp@gmail.com",
-  //             from_name: 'University',
-  //             to: emails_str,
-  //             subject: 'Class scheduled',
-  //             body_text: "Hey, "+subject+" class is scheduled at "+input_start_date+" for "+duration+" minutes", 
-  //           };
+  con.query(q_get_name_of_teacher,function(err,result){
+      console.log(result);
+      name=result[0].name;
+  });
+  
+  let q="select count(startDate) as overlap from classes join departments on classes.dept_id=departments.dept_id where year='"+ year+"' and name='"+dept+"' and startDate between '"+input_start_date+"' and '"+input_end_date
+      +"' or endDate between '"+input_start_date+"' and '"+input_end_date
+      +"' or startDate<'"+input_start_date+"' and endDate>'"+input_end_date+"' or startDate>'"+input_start_date
+      +"' and endDate<'"+input_end_date+"';";
+      // let query="select * from datetimes where startDate between "+input_start_date+" and "+input_end_date+"' or endDate between '"+input_start_date+"' and '"+input_end_date
+      // +"' or startDate<'"+input_start_date+"' and endDate>'"+input_end_date+"' or startDate>'"+input_start_date+"' and endDate<'"+input_end_date;
+      console.log(q);
+      con.query(q, function (err, result) {
+        if(result[0].overlap==0){
+          let dept_id;
+          con.query("select dept_id from departments where name='"+dept+"';", function(err,result){
+              dept_id=result[0].dept_id;
+              //console.log(dept);
+              let aq="insert into classes values('"+localStorage.user_id+"','"+year+"','"+dept_id+"','"+subject+"','"+input_start_date+"','"+input_end_date+"');";
+            console.log(aq);
+            con.query(aq,function(er,res){
+                console.log(res);
+                if (err) throw err;
+            });
+            let get_emails_query="select email from students where dept_id='"+dept_id+"' and year='"+year+"';";
+            if(year==1){
+              year="1st";
+            }
+            else if(year==2){
+              year="2nd";
+            }
+            else if(year==3){
+              year="3rd";
+            }
+            else{
+              year="4th";
+            }
+            res.render('sc',{
+              dept: dept,
+              year: year,
+              time: input_start_date,
+            })
+            con.query(get_emails_query,function(er,res){
+              //console.log(res);
+              if (err) throw err;
+              if(res.length>0){
+                let emails=[];
+              let emails_str="";
+            for(let i=0;i<res.length;i++){
+              emails.push(res[i].email);
+            }
+            for(let i=0;i<res.length-1;i++){
+              emails_str+=res[i].email+",";
+            }
+            emails_str+=res[res.length-1].email;
+            console.log(emails_str);
+            var msg = {
+              from: "jaykay.sbp@gmail.com",
+              from_name: 'University',
+              to: emails_str,
+              subject: 'Class scheduled',
+              body_text: "Hey, "+subject+" class is scheduled at "+input_start_date+" for "+duration+" minutes", 
+            };
              
-  //           client.mailer.send(msg, function(er, res) {
-  //             if (er) {
-  //               return console.error(er);
-  //             }
+            client.mailer.send(msg, function(er, res) {
+              if (er) {
+                return console.error(er);
+              }
              
-  //             console.log(res);
-  //           });
-  //             }
+              console.log(res);
+            });
+              }
               
-  //         });
-  //         });
+          });
+          });
             
-  //           //res.sendFile('scheduled.html',{root:__dirname});
+            //res.sendFile('scheduled.html',{root:__dirname});
             
             
-  //           console.log(res);
+            console.log(res);
             
 
             
             
-  //       }
-  //       else{
-  //           res.render('not_scheduled');
-  //       }
-  //       if (err) throw err;
-  //     });
+        }
+        else{
+            res.render('not_scheduled');
+        }
+        if (err) throw err;
+      });
 });
 
+
+app.get('/classes_stud',requiresAuth(),(req,res)=>
+{
+   let q="select dept_id, year from students where student_id='"+localStorage.user_id+"';";
+   con.query(q, function(err,result){
+    console.log(result);
+    let dept_id=result[0].dept_id;
+    let year=result[0].year;
+    let query="select name, subject, startDate, endDate from teacher join classes on teacher.teacher_id=classes.teacher_id where dept_id='"+dept_id+"' and year='"+year+"' and startDate>CONCAT(CURDATE(),' 00:00:00') order by startDate;";
+    console.log(query);
+    con.query(query, function(err,rese){
+      res.render('classes_student',{
+        classes: rese
+      })
+    })
+  });
+   
+});
+app.get('/classes',requiresAuth(),(req,res)=>
+{
+    res.sendFile('classes.html',{root:__dirname});
+});
+app.post('/show-classes',urlencodedParser,function(req,res){
+  let dept=req.body.dept;
+  let year=req.body.year;
+  let dept_id;
+    console.log("show-classes");
+    con.query("select dept_id from departments where name='"+dept+"';", function(err,result){
+          
+          dept_id=result[0].dept_id;
+        console.log(dept_id);
+        let get_classes="select name,subject, startDate,endDate from classes join teacher on teacher.teacher_id=classes.teacher_id where year='"+year+"' and dept_id='"+dept_id+"' and startDate>CONCAT(CURDATE(),' 00:00:00') order by startDate;";
+        console.log(get_classes);
+        con.query(get_classes, function(err,result){
+          console.log(result);
+          res.render('classes',{
+            classes: result
+          })
+        });
+        
+      
+          //console.log(dept);
+      
+    });
+    
+
+})
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
 });

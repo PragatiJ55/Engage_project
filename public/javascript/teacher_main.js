@@ -10,7 +10,11 @@ $(document).ready(function () {
         location.href='/scheduled_classes';
     });
     $("#hp_btn").click(function () {
-        console.log('meow');
+        
         document.location.href='/';
+    });
+    $("#logout").click(function () {
+        
+        document.location.href='/logout';
     });
  });

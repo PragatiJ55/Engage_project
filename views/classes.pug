@@ -1,0 +1,21 @@
+doctype html
+html(lang='en')
+ head
+   title Scheduled!
+   link(rel='stylesheet' href='css/scheduled.css')
+   script(src='https://code.jquery.com/jquery-3.6.0.min.js' integrity='sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=' crossorigin='anonymous')
+   script(src='javascript/teacher_main.js')
+ body
+   div(class="center")
+     table
+       tr
+         th Teacher name
+         th Subject
+         th Start time
+         th End time
+       each val in classes
+         tr
+           td=val.name
+           td=val.subject
+           td=val.startDate
+           td=val.endDate
