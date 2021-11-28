@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 80;
 const { auth, requiresAuth } = require("express-openid-connect");
 var bodyParser = require("body-parser");
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
@@ -10,7 +10,9 @@ app.engine('pug', require('pug').__express)
 app.set('view engine', 'pug');
 var LocalStorage = require('node-localstorage').LocalStorage,
 localStorage = new LocalStorage('./scratch');
-const { Connection, Request } = require("tedious");
+var session = require('express-session');
+
+
 
 var elasticemail = require('elasticemail');
 var client = elasticemail.createClient({
@@ -18,6 +20,24 @@ var client = elasticemail.createClient({
   apiKey: '6608A6A955AAE805C390C1A738C0D0DF964FD242D1B38136E6CC8F7FD1EC212F39E8E439D880A4DB70FC833B040AB324'
 });
 const mysql = require('mysql');
+var sess = {
+  secret: 'CHANGE THIS TO A RANDOM SECRET',
+  cookie: {},
+  resave: false,
+  saveUninitialized: true
+};
+if (app.get('env') === 'production') {
+  // Use secure cookies in production (requires SSL/TLS)
+  console.log("Production");
+  sess.cookie.secure = true;
+
+  // Uncomment the line below if your application is behind a proxy (like on Heroku)
+  // or if you're encountering the error message:
+  // "Unable to verify authorization request state"
+  // app.set('trust proxy', 1);
+}
+
+app.use(session(sess));
 
 var config =
 {
@@ -45,7 +65,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(
   auth({
     issuerBaseURL: "https://dev-kh2d5kc6.us.auth0.com",
-    baseURL: "https://testpragati.azurewebsites.net/",
+    baseURL: "https://testpragati.azurewebsites.net",
     clientID: "gxjResFZ3CyYq3C3ICpCA1ZhQfxANLL9",
     secret: "db986688af1cb4d29871b4e93673e29821657eb8f0a2183b670ff58313e8e091",
     authRequired: false,
