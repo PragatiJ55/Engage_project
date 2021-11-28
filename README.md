@@ -2,6 +2,12 @@
 
 Website hosted on azure at https://testpragati.azurewebsites.net/
 
+If the hosted website has some error(hosted the website on free credits left in Azure for students subscription), please run the website locally.
+Steps to run website locally:
+1. Run command - npm install
+2. Change the baseURL in line 48 to "http://localhost:8080/"
+3. Run command - node server.js
+
 #Features:
 
 1. Allows authentication for 2 roles, teacher and student. Once authenticated, the interface is shown based on the role.
