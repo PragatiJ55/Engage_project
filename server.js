@@ -21,7 +21,7 @@ var client = elasticemail.createClient({
 });
 const mysql = require('mysql');
 var sess = {
-  secret: 'CHANGE THIS TO A RANDOM SECRET',
+  secret: 'db986688af1cb4d29871b4e93673e29821657eb8f0a2183b670ff58313e8e091',
   cookie: {},
   resave: false,
   saveUninitialized: true
@@ -29,12 +29,12 @@ var sess = {
 if (app.get('env') === 'production') {
   // Use secure cookies in production (requires SSL/TLS)
   console.log("Production");
-  sess.cookie.secure = true;
+  sess.cookie.secure = false;
 
   // Uncomment the line below if your application is behind a proxy (like on Heroku)
   // or if you're encountering the error message:
   // "Unable to verify authorization request state"
-  // app.set('trust proxy', 1);
+  app.set('trust proxy', 1);
 }
 
 app.use(session(sess));
