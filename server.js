@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const port = process.env.PORT || 80;
+const port = process.env.PORT || 8080;
 const { auth, requiresAuth } = require("express-openid-connect");
 var bodyParser = require("body-parser");
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
@@ -65,7 +65,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(
   auth({
     issuerBaseURL: "https://dev-kh2d5kc6.us.auth0.com",
-    baseURL: "https://testpragati.azurewebsites.net",
+    baseURL: "http://localhost:8080/",
     clientID: "gxjResFZ3CyYq3C3ICpCA1ZhQfxANLL9",
     secret: "db986688af1cb4d29871b4e93673e29821657eb8f0a2183b670ff58313e8e091",
     authRequired: false,
@@ -80,6 +80,7 @@ var auth0 = new AuthenticationClient({
   clientId: "FU04qrUSSoWOH6NAYBO49vrcuYagYsoY",
   clientSecret:
     "3MszsueN33eG7OgBhLMStfPORgbUHIC-p9TrI5yXTR2B6KrseC7pmWQGxVhvA13g",
+    nonce:"lmasl66sa"
 });
 let role = "";
 app.get("/",requiresAuth(), (req, res) => {
