@@ -1,6 +1,6 @@
 # Engage_project
 
-Website hosted on azure at https://testpragati.azurewebsites.net/
+Website hosted on azure at https://testpragati.azurewebsites.net/ . If nonce mismatch error is encountered,please open the website on another tab.
 
 If the hosted website has some error(hosted the website on free credits left in Azure for students subscription), please run the website locally.
 Steps to run website locally:
