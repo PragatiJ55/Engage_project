@@ -16,7 +16,7 @@ Steps to run website locally:
 If the start time and duration overlaps with a class already scheduled, for example If teacherA is trying to schedule a class at 3:30 PM, but teacherB already scheduled a class
 for the same department and year at 3PM for duration of 50 minutes, then teacher A cannot schedule the class. This feature covers all cases in which overlap can take place.
 
-3. Once class is scheduled, an email is sent to all the students of the concerned year and department stating the subject, start time and duration of their class.
+3. Once class is scheduled, an email is sent to all the students of the concerned year and department stating the subject, start time and duration of their class. Please check spam if you cannot find the email in inbox.
 
 4. The teacher can select an year and department to see all the classes scheduled respectively. These classes are always shown in ascending order of start time, 
 and only those classes are shown which are scheduled from today(i.e classes scheduled on current date and later).
